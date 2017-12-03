@@ -4,7 +4,10 @@ description: Split page content up into different web pages.
 author: Taufik Nurrohman
 type: Markdown
 version: 1.0.0
-dependency: {"extension":["page"]}
+
+dependency:
+  extension:
+    - page
 ...
 
 Split page content into sections by inserting `<!-- next -->` as the intersection marker. This plugin is useful for those who want to create a step-by-step guide, or a gallery that contains multiple images, so that reader don’t have to load all the images at once.
