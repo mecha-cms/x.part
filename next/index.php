@@ -10,7 +10,7 @@ function fn_next($content, $lot = []) {
     $index = Request::get($q = Plugin::state(__DIR__, 'q'), 1);
     for ($i = 0, $j = count($step) - 1; $i < $j; ++$i) {
         $ii = $i + 1;
-        $a[] = $index === $ii ? HTML::span($ii, ['classes' => ['a']]) : HTML::a($ii, $url->current . HTTP::query([$q => $i > 0 ? $ii : false]), false, ['rel' => $ii > $index ? 'next' : 'prev']);
+        $a[] = $index === $ii ? HTML::span($ii, ['class[]' => ['a']]) : HTML::a($ii, $url->current . HTTP::query([$q => $i > 0 ? $ii : false]), false, ['rel' => $ii > $index ? 'next' : 'prev']);
     }
     return $index > -1 && isset($step[$index]) ? trim($step[$index]) . '<nav class="next"><strong>' . $language->page . '</strong> ' . implode(' ', $a) . '</nav>' : To::sentence($language->_finded);
 }
