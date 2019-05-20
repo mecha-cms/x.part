@@ -6,7 +6,7 @@ namespace _\next {
         if (isset($page) && $page->exist) {
             if ($i = \substr_count(\file_get_contents($page->path), '<!-- next -->')) {
                 global $url;
-                $q = \Plugin::state('next', 'q');
+                $q = \plugin('next')['q'];
                 $current = \HTTP::get($q) ?? 1;
                 // Add `<link>` tag(s) for SEO ;)
                 $out = "";
@@ -30,7 +30,7 @@ namespace _ {
             return $content;
         }
         global $language, $url;
-        $state = \Plugin::state('next');
+        $state = \plugin('next');
         $steps = \explode('<!-- next -->', $content);
         $current = \HTTP::get($q = $state['q']) ?? 1;
         $a = [];
