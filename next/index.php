@@ -1,13 +1,11 @@
 <?php
 
-namespace _\next {
+namespace _\lot\x\next {
     function meta($content) {
         extract($GLOBALS, \EXTR_SKIP);
         if (isset($page) && $page->exist) {
-            if ($i = \substr_count(\file_get_contents($page->path), '<!-- next -->')) {
-                global $url;
-                $q = \plugin('next')['q'];
-                $current = \HTTP::get($q) ?? 1;
+            if ($i = \substr_count($page->content, '<!-- next -->')) {
+                $current = \Get::get($q = \State::get('x.next', true)['q']) ?? 1;
                 // Add `<link>` tag(s) for SEO ;)
                 $out = "";
                 if ($current < $i) {
@@ -24,26 +22,31 @@ namespace _\next {
     \Hook::set('content', __NAMESPACE__ . "\\meta", 1.9);
 }
 
-namespace _ {
+namespace _\lot\x {
     function next($content) {
-        if (!$content || \strpos($content, '<!-- next -->') === false) {
+        if (!$content || false === \strpos($content, '<!-- next -->')) {
             return $content;
         }
-        global $language, $url;
-        $state = \plugin('next');
+        global $url;
+        $state = \State::get('x.next', true);
         $steps = \explode('<!-- next -->', $content);
-        $current = \HTTP::get($q = $state['q']) ?? 1;
-        $a = [];
-        return ($current > -1 && isset($steps[$current - 1]) ? \trim($steps[$current - 1]) : '<p>' . $language->pageErrorDescription . '</p>') . '<nav class="next p">' . call_user_func(function($current, $count, $chunk, $peek, $fn, $first, $prev, $next, $last) {
+        $current = \Get::get($q = $state['q']) ?? 1;
+        \State::set([
+            'has' => [
+                'next' => isset($steps[$current + 1]),
+                'prev' => $current > 1
+            ]
+        ]);
+        return ($current > -1 && isset($steps[$current - 1]) ? \trim($steps[$current - 1]) : '<p>' . \i('Not found.') . '</p>') . '<nav class="next p">' . (function($current, $count, $chunk, $peek, $fn, $first, $prev, $next, $last) {
             $begin = 1;
-            $end = (int) ceil($count / $chunk);
+            $end = (int) \ceil($count / $chunk);
             $out = "";
             if ($end <= 1) {
                 return $out;
             }
             if ($current <= $peek + $peek) {
                 $min = $begin;
-                $max = min($begin + $peek + $peek, $end);
+                $max = \min($begin + $peek + $peek, $end);
             } else if ($current > $end - $peek - $peek) {
                 $min = $end - $peek - $peek;
                 $max = $end;
@@ -56,14 +59,14 @@ namespace _ {
                 if ($current === $begin) {
                     $out .= '<b title="' . $prev . '">' . $prev . '</b>';
                 } else {
-                    $out .= '<a href="' . call_user_func($fn, $current - 1) . '" title="' . $prev . '" rel="prev">' . $prev . '</a>';
+                    $out .= '<a href="' . $fn($current - 1) . '" title="' . $prev . '" rel="prev">' . $prev . '</a>';
                 }
                 $out .= '</span> ';
             }
             if ($first && $last) {
                 $out .= '<span>';
                 if ($min > $begin) {
-                    $out .= '<a href="' . call_user_func($fn, $begin) . '" title="' . $first . '" rel="prev">' . $begin . '</a>';
+                    $out .= '<a href="' . $fn($begin) . '" title="' . $first . '" rel="prev">' . $begin . '</a>';
                     if ($min > $begin + 1) {
                         $out .= ' <span>&#x2026;</span>';
                     }
@@ -72,14 +75,14 @@ namespace _ {
                     if ($current === $i) {
                         $out .= ' <b title="' . $i . '">' . $i . '</b>';
                     } else {
-                        $out .= ' <a href="' . call_user_func($fn, $i) . '" title="' . $i . '" rel="' . ($current >= $i ? 'prev' : 'next') . '">' . $i . '</a>';
+                        $out .= ' <a href="' . $fn($i) . '" title="' . $i . '" rel="' . ($current >= $i ? 'prev' : 'next') . '">' . $i . '</a>';
                     }
                 }
                 if ($max < $end) {
                     if ($max < $end - 1) {
                         $out .= ' <span>&#x2026;</span>';
                     }
-                    $out .= ' <a href="' . call_user_func($fn, $end) . '" title="' . $last . '" rel="next">' . $end . '</a>';
+                    $out .= ' <a href="' . $fn($end) . '" title="' . $last . '" rel="next">' . $end . '</a>';
                 }
                 $out .= '</span>';
             }
@@ -88,14 +91,14 @@ namespace _ {
                 if ($current === $end) {
                     $out .= '<b title="' . $next . '">' . $next . '</b>';
                 } else {
-                    $out .= '<a href="' . call_user_func($fn, $current + 1) . '" title="' . $next . '" rel="next">' . $next . '</a>';
+                    $out .= '<a href="' . $fn($current + 1) . '" title="' . $next . '" rel="next">' . $next . '</a>';
                 }
                 $out .= '</span>';
             }
             return $out;
-        }, $current, count($steps), 1, $state['peek'] ?? 2, function($i) use($q, $url) {
+        })($current, \count($steps), 1, $state['peek'] ?? 2, function($i) use($q, $url) {
             return $url->clean . $url->query('&amp;', [$q => $i > 1 ? $i : false]);
-        }, $language->first, !empty($state['prev']) ? $language->prev : false, !empty($state['next']) ? $language->next : false, $language->last) . '</nav>';
+        }, \i('First'), !empty($state['prev']) ? \i('Previous') : false, !empty($state['next']) ? \i('Next') : false, \i('Last')) . '</nav>';
     }
     \Hook::set('page.content', __NAMESPACE__ . "\\next", 2.1);
 }

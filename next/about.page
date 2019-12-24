@@ -1,22 +1,21 @@
 ---
 title: Next
-description: Split page content up into different web pages.
+description: Split page content into different web pages.
 author: Taufik Nurrohman
 type: Markdown
-version: 2.0.1
+version: 2.0.3
 
-lot:
-  x:
-    page: 1
+use:
+  '.\lot\x\page': 1
 ...
 
-Split page content into sections by inserting `<!-- next -->` as the intersection marker. This plugin is useful for those who want to create a step-by-step guide, or a gallery that contains multiple images, so that reader don’t have to load all the images at once.
+Split your page content into different web pages by inserting `<!-- next -->` comment as the intersection marker. This extension is useful for those who want to create a step-by-step guide, or a gallery that contains multiple images, so that reader don’t have to load all the images at once.
 
 ### Usage
 
 ~~~ .yaml
 ---
-title: How to Move on Without Him/Her
+title: How To Move On Without Him/Her
 description: We all have trouble getting over someone.
 type: Markdown
 ...
@@ -45,5 +44,3 @@ When you’re around people that care about you, not only does it take your mind
 
 Etc.
 ~~~
-
-<!-- block:donate -->

@@ -1,4 +1,10 @@
-Next Plugin for Mecha
-=====================
+Next Extension for Mecha
+========================
 
-> Split page content up into different web pages.
+Release Notes
+-------------
+
+### 2.0.3
+
+ - Enabled `has.next` and `has.prev` conditional statements.
+ - Improved numbered page navigation.

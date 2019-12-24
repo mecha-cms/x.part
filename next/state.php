@@ -1,8 +1,12 @@
 <?php
 
+
+
+
+
 return [
     'next' => true,
     'peek' => 2,
-    'prev' => true,
+    'prev' => false, // Hide the “previous” link
     'q' => 'page'
 ];
