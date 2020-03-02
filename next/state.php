@@ -1,12 +1,11 @@
 <?php
 
-
-
-
-
 return [
-    'next' => true,
-    'peek' => 2,
-    'prev' => false, // Hide the “previous” link
-    'q' => 'page'
+    'path' => '/page',
+    'cut' => '<!-- next -->',
+    'pager' => [
+        'next' => true,
+        'peek' => 2,
+        'prev' => false // Hide the “previous” link
+    ]
 ];

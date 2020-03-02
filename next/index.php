@@ -1,43 +1,39 @@
 <?php
 
 namespace _\lot\x\next {
-    function meta($content) {
-        extract($GLOBALS, \EXTR_SKIP);
-        if (isset($page) && $page->exist) {
-            if ($i = \substr_count($page->content, '<!-- next -->')) {
-                $current = \Get::get($q = \State::get('x.next', true)['q']) ?? 1;
-                // Add `<link>` tag(s) for SEO ;)
-                $out = "";
-                if ($current < $i) {
-                    if ($current > 1) {
-                        $out .= '<link href="' . $url->clean . $url->query('&amp;', [$q => $current - 1]) . '" rel="prev">';
-                    }
-                    $out .= '<link href="' . $url->clean . $url->query('&amp;', [$q => $current + 1]) . '" rel="next">';
-                }
-                return \str_replace('</head>', $out . '</head>', $content);
-            }
-        }
-        return $content;
+    function route($path) {
+        \Route::fire('*', [$path]);
     }
-    \Hook::set('content', __NAMESPACE__ . "\\meta", 1.9);
+    \Route::set('*' . (\State::get('x.next.path') ?? '/page'), __NAMESPACE__ . "\\route", 10);
 }
 
 namespace _\lot\x {
     function next($content) {
-        if (!$content || false === \strpos($content, '<!-- next -->')) {
+        $state = \State::get('x.next', true);
+        if (!$content || isset($state['cut']) && false === \strpos($content, $state['cut'])) {
             return $content;
         }
         global $url;
-        $state = \State::get('x.next', true);
-        $steps = \explode('<!-- next -->', $content);
-        $current = \Get::get($q = $state['q']) ?? 1;
+        $that = $this;
+        $steps = \explode($state['cut'], $content);
+        $p = $state['path'] ?? '/page';
+        $i = $url['i'] ?? 1;
+        if ($i > 1) {
+            $current = $p === \substr($url['path'], -(\strlen($p))) ? $i : \count($steps) + 1;
+        } else {
+            $current = $i;
+        }
+        $exist = $current > -1 && isset($steps[$current - 1]);
         \State::set([
             'has' => [
                 'next' => isset($steps[$current + 1]),
                 'prev' => $current > 1
+            ],
+            'is' => [
+                'error' => !$exist
             ]
         ]);
-        return ($current > -1 && isset($steps[$current - 1]) ? \trim($steps[$current - 1]) : '<p>' . \i('Not found.') . '</p>') . '<nav class="next p">' . (function($current, $count, $chunk, $peek, $fn, $first, $prev, $next, $last) {
+        return $exist ? \trim($steps[$current - 1]) . '<nav class="next p">' . (function($current, $count, $chunk, $peek, $fn, $first, $prev, $next, $last) {
             $begin = 1;
             $end = (int) \ceil($count / $chunk);
             $out = "";
@@ -96,9 +92,9 @@ namespace _\lot\x {
                 $out .= '</span>';
             }
             return $out;
-        })($current, \count($steps), 1, $state['peek'] ?? 2, function($i) use($q, $url) {
-            return $url->clean . $url->query('&amp;', [$q => $i > 1 ? $i : false]);
-        }, \i('First'), !empty($state['prev']) ? \i('Previous') : false, !empty($state['next']) ? \i('Next') : false, \i('Last')) . '</nav>';
+        })($current, \count($steps), 1, $state['pager']['peek'] ?? 2, function($i) use($p, $that, $url) {
+            return $that->url . ($i > 1 ? $p . '/' . $i : "") . $url->query . $url->hash;
+        }, \i('First'), !empty($state['pager']['prev']) ? \i('Previous') : false, !empty($state['pager']['next']) ? \i('Next') : false, \i('Last')) . '</nav>' : '<p>' . \i('Not found.') . '</p>';
     }
     \Hook::set('page.content', __NAMESPACE__ . "\\next", 2.1);
 }
