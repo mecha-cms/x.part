@@ -19,7 +19,7 @@ namespace _\lot\x {
         $p = $state['path'] ?? '/page';
         $i = $url['i'] ?? 1;
         if ($i > 1) {
-            $current = $p === \substr($url['path'], -(\strlen($p))) ? $i : \count($steps) + 1;
+            $current = $p === \substr($url['path'], -\strlen($p)) ? $i : \count($steps) + 1;
         } else {
             $current = $i;
         }
