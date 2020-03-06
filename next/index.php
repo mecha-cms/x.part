@@ -2,6 +2,13 @@
 
 namespace _\lot\x\next {
     function route($path) {
+        $n = \State::get('x.next.path') ?? '/page';
+        if (\File::exist([
+            \LOT . \DS . 'page' . \DS . $path . $n . '.archive',
+            \LOT . \DS . 'page' . \DS . $path . $n . '.page'
+        ])) {
+            \Route::fire('*', [$path . $n]);
+        }
         \Route::fire('*', [$path]);
     }
     \Route::set('*' . (\State::get('x.next.path') ?? '/page'), __NAMESPACE__ . "\\route", 10);
