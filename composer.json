@@ -1,0 +1,11 @@
+{
+  "description": "Split page content into different web pages.",
+  "license": "GPL-3.0-or-later",
+  "name": "mecha-cms/x.part",
+  "require": {
+    "mecha-cms/x.page": "^3.0.0"
+  },
+  "suggest": {
+    "mecha-cms/x.pager": "Install this extension to turn the next/previous navigation into a numbered page navigation."
+  }
+}

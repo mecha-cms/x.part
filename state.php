@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'path' => '/page',
+    'route' => '/page',
     'cut' => '<!-- next -->',
     'pager' => [
         'next' => true,

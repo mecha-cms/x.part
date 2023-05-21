@@ -1,108 +1,96 @@
 <?php
 
-namespace x\next {
-    function route($any) {
-        $path = \State::get('x.next.path') ?? '/page';
-        if (\File::exist([
-            \LOT . \DS . 'page' . \DS . $any . $path . '.archive',
-            \LOT . \DS . 'page' . \DS . $any . $path . '.page'
-        ])) {
-            \Route::fire('*', [$any . $path]);
-        }
-        \Route::fire('*', [$any]);
-    }
-    \Route::set('*' . (\State::get('x.next.path') ?? '/page'), __NAMESPACE__ . "\\route", 10);
-}
-
-namespace x {
-    function next($content) {
-        extract($GLOBALS, \EXTR_SKIP);
-        $cut = $state->x->next->cut ?? null;
-        $pager = $state->x->next->pager ?? null;
-        $path = $state->x->next->path ?? '/page';
-        if (!$content || isset($cut) && false === \strpos($content, $cut)) {
+namespace x\part {
+    function content($content) {
+        if (!$content || false === \strpos($content, "\f")) {
             return $content;
         }
-        $that = $this;
-        $steps = \explode($cut, $content);
-        $i = $url['i'] ?? 1;
-        if ($i > 1) {
-            $current = $path === \substr($url['path'], -\strlen($path)) ? $i : \count($steps) + 1;
-        } else {
-            $current = $i;
+        \extract($GLOBALS, \EXTR_SKIP);
+        $path = \trim($url->path ?? $state->route ?? 'index', '/');
+        if ($path && \preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
+            [$any, $path, $part] = $m;
         }
-        $exist = $current > -1 && isset($steps[$current - 1]);
-        \State::set([
-            'has' => [
-                'next' => isset($steps[$current]),
-                'prev' => $current > 1
-            ],
-            'is' => [
-                'error' => !$exist ? 404 : false
-            ]
-        ]);
-        return $exist ? \trim($steps[$current - 1]) . '<nav class="next p">' . (static function($current, $count, $chunk, $peek, $fn, $first, $prev, $next, $last) {
-            $begin = 1;
-            $end = (int) \ceil($count / $chunk);
-            $out = "";
-            if ($end <= 1) {
-                return $out;
+        $part = ((int) ($part ?? 1)) - 1;
+        $parts = \explode("\f", $content);
+        $route = \trim($state->x->part->route ?? 'page', '/');
+        $content = $parts[$part] ?? "";
+        if ('/' . $route !== \substr($path, -(\strlen($route) + 1))) {
+            $path .= '/' . $route;
+            $content = \reset($parts); // Invalid route, return the first part!
+        }
+        if ("" === $content) {
+            return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
+        }
+        $end = "";
+        $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
+        $pager = $pager->chunk(1, $part);
+        $pager->hash = $url->hash;
+        $pager->path = '/' . $path;
+        $pager->query = $url->query;
+        if (isset($state->x->pager) && \class_exists("\\Layout")) {
+            $end = \Layout::pager('peek', [
+                '2' => ['role' => 'doc-pagelist'],
+                'pager' => $pager
+            ]);
+        } else {
+            $end .= '<nav aria-label="' . \eat(\i('Page Navigation')) . '" role="doc-pagelist">';
+            if ($prev = $pager->prev) {
+                $end .= '<a href="' . \eat($prev->link) . '" rel="prev" title="' . \eat(\i('Go to the %s page', 'previous')) . '">' . \i('Previous') . '</a>';
             }
-            if ($current <= $peek + $peek) {
-                $min = $begin;
-                $max = \min($begin + $peek + $peek, $end);
-            } else if ($current > $end - $peek - $peek) {
-                $min = $end - $peek - $peek;
-                $max = $end;
-            } else {
-                $min = $current - $peek;
-                $max = $current + $peek;
+            if ($next = $pager->next) {
+                $end .= '<a href="' . \eat($next->link) . '" rel="next" title="' . \eat(\i('Go to the %s page', 'next')) . '">' . \i('Next') . '</a>';
             }
-            if ($prev) {
-                $out = '<span>';
-                if ($current === $begin) {
-                    $out .= '<b title="' . $prev . '">' . $prev . '</b>';
-                } else {
-                    $out .= '<a href="' . $fn($current - 1) . '" title="' . $prev . '" rel="prev">' . $prev . '</a>';
-                }
-                $out .= '</span> ';
-            }
-            if ($first && $last) {
-                $out .= '<span>';
-                if ($min > $begin) {
-                    $out .= '<a href="' . $fn($begin) . '" title="' . $first . '" rel="prev">' . $begin . '</a>';
-                    if ($min > $begin + 1) {
-                        $out .= ' <span>&#x2026;</span>';
-                    }
-                }
-                for ($i = $min; $i <= $max; ++$i) {
-                    if ($current === $i) {
-                        $out .= ' <b title="' . $i . '">' . $i . '</b>';
-                    } else {
-                        $out .= ' <a href="' . $fn($i) . '" title="' . $i . '" rel="' . ($current >= $i ? 'prev' : 'next') . '">' . $i . '</a>';
-                    }
-                }
-                if ($max < $end) {
-                    if ($max < $end - 1) {
-                        $out .= ' <span>&#x2026;</span>';
-                    }
-                    $out .= ' <a href="' . $fn($end) . '" title="' . $last . '" rel="next">' . $end . '</a>';
-                }
-                $out .= '</span>';
-            }
-            if ($next) {
-                $out .= ' <span>';
-                if ($current === $end) {
-                    $out .= '<b title="' . $next . '">' . $next . '</b>';
-                } else {
-                    $out .= '<a href="' . $fn($current + 1) . '" title="' . $next . '" rel="next">' . $next . '</a>';
-                }
-                $out .= '</span>';
-            }
-            return $out;
-        })($current, \count($steps), 1, $pager->peek ?? 2, function($i) use($path, $that, $url) {
-            return $that->url . ($i > 1 ? $path . '/' . $i : "") . $url->query . $url->hash;
-        }, \i('First'), !empty($pager->prev) ? \i('Previous') : false, !empty($pager->next) ? \i('Next') : false, \i('Last')) . '</nav>' : '<p>' . \i('Not found.') . '</p>';
+            $end .= '</nav>';
+        }
+        $content = '<div aria-posinset="' . ($part + 1) . '" aria-setsize="' . \count($parts) . '" role="doc-part">' . $content . '</div>';
+        return $content . $end;
     }
-    \Hook::set('page.content', __NAMESPACE__ . "\\next", 2.1);
+    function n($content) {
+        if (!$content) {
+            return $content;
+        }
+        $exist = \strpos($content, "\f") ?: \strpos($content, '&#12;') ?: \stripos($content, '&#xc;');
+        if (!$exist) {
+            return $content;
+        }
+        // Normalize `&#12;` and `&#xc;` to a literal `\f`, also, remove the surrounding HTML element if any (usually a paragraph element)
+        return \preg_replace('/\s*<([\w:-]+)(?:\s[^>]*)?>\s*(?:[\f]|&#(?:12|x[cC]);)\s*<\/\1>\s*|\s*(?:[\f]|&#(?:12|x[cC]);)\s*/', "\f", $content);
+    }
+    function route($content, $path, $query, $hash) {
+        \extract($GLOBALS, \EXTR_SKIP);
+        $path = \trim($path ?? $state->route ?? 'index', '/');
+        if ($path && \preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
+            [$any, $path, $part] = $m;
+        }
+        $part = ((int) ($part ?? 1)) - 1;
+        $route = \trim($state->x->part->route ?? 'page', '/');
+        // Test if current route ends with `/page` and then resolve it to the native page route
+        if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1)) && !\exist([
+            \LOT . \D . 'page' . \D . $path . '.archive',
+            \LOT . \D . 'page' . \D . $path . '.page'
+        ], 1)) {
+            $path = \substr($path, 0, $end);
+            $exist = $path && \exist([
+                \LOT . \D . 'page' . \D . $path . '.archive',
+                \LOT . \D . 'page' . \D . $path . '.page'
+            ], 1);
+            \State::set([
+                'has' => [
+                    'page' => !!$exist,
+                    'pages' => false
+                ],
+                'is' => [
+                    'error' => false,
+                    'page' => !!$exist,
+                    'pages' => false
+                ],
+                'part' => $part + 1
+            ]);
+            return \Hook::fire('route.page', [$content, '/' . $path, $query, $hash]);
+        }
+        return $content;
+    }
+    \Hook::set('page.content', __NAMESPACE__ . "\\content", 2.2);
+    \Hook::set('page.content', __NAMESPACE__ . "\\n", 2.1);
+    \Hook::set('route.page', __NAMESPACE__ . "\\route", 99.99);
 }
