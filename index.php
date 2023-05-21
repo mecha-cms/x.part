@@ -21,28 +21,51 @@ namespace x\part {
         if ("" === $content) {
             return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
         }
-        $end = "";
         $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
         $pager = $pager->chunk(1, $part);
         $pager->hash = $url->hash;
         $pager->path = '/' . $path;
         $pager->query = $url->query;
+        $content = '<div aria-posinset="' . ($part + 1) . '" aria-setsize="' . \count($parts) . '" role="doc-part">' . $content . '</div>';
         if (isset($state->x->pager) && \class_exists("\\Layout")) {
-            $end = \Layout::pager('peek', [
+            $end = \Layout::pager($state->x->part->pager ?? 'peek', [
                 '2' => ['role' => 'doc-pagelist'],
                 'pager' => $pager
             ]);
         } else {
-            $end .= '<nav aria-label="' . \eat(\i('Page Navigation')) . '" role="doc-pagelist">';
-            if ($prev = $pager->prev) {
-                $end .= '<a href="' . \eat($prev->link) . '" rel="prev" title="' . \eat(\i('Go to the %s page', 'previous')) . '">' . \i('Previous') . '</a>';
-            }
-            if ($next = $pager->next) {
-                $end .= '<a href="' . \eat($next->link) . '" rel="next" title="' . \eat(\i('Go to the %s page', 'next')) . '">' . \i('Next') . '</a>';
-            }
-            $end .= '</nav>';
+            $next = $pager->next;
+            $prev = $pager->prev;
+            $end = new \HTML([
+                0 => 'p',
+                1 => [
+                    'prev' => [
+                        0 => 'a',
+                        1 => \i('Previous'),
+                        2 => [
+                            'aria-disabled' => $prev ? null : 'true',
+                            'href' => $prev ? $prev->link : null,
+                            'rel' => $prev ? 'prev' : null,
+                            'title' => \i('Go to the %s page.', 'previous')
+                        ]
+                    ],
+                    ' ' => '&#x2003;',
+                    'next' => [
+                        0 => 'a',
+                        1 => \i('Next'),
+                        2 => [
+                            'aria-disabled' => $next ? null : 'true',
+                            'href' => $next ? $next->link : null,
+                            'rel' => $next ? 'next' : null,
+                            'title' => \i('Go to the %s page.', 'next')
+                        ]
+                    ]
+                ],
+                2 => [
+                    'aria-label' => \i('Page Navigation'),
+                    'role' => 'doc-pagelist'
+                ]
+            ], true);
         }
-        $content = '<div aria-posinset="' . ($part + 1) . '" aria-setsize="' . \count($parts) . '" role="doc-part">' . $content . '</div>';
         return $content . $end;
     }
     function n($content) {
