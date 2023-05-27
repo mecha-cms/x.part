@@ -5,11 +5,11 @@ namespace x\part {
         if (!$content || false === \strpos($content, "\f")) {
             return $content;
         }
+        \extract($GLOBALS, \EXTR_SKIP);
         // There must be at least 2 form feed character(s) in content or it will be considered as a page excerpt marker
-        if (\substr_count($content, "\f") < 2) {
+        if (\substr_count($content, "\f") < ($state->x->part->min ?? 2)) {
             return $content;
         }
-        \extract($GLOBALS, \EXTR_SKIP);
         $path = \trim($url->path ?? $state->route ?? 'index', '/');
         if ($path && \preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
             [$any, $path, $part] = $m;
