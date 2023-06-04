@@ -93,14 +93,15 @@ function route__page($content, $path, $query, $hash) {
     $part = ((int) ($part ?? 1)) - 1;
     $route = \trim($state->x->part->route ?? 'page', '/');
     // Test if current route ends with `/page` and then resolve it to the native page route
+    $folder = \LOT . \D . 'page' . \D . $path;
     if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1)) && !\exist([
-        \LOT . \D . 'page' . \D . $path . '.archive',
-        \LOT . \D . 'page' . \D . $path . '.page'
+        $folder . '.archive',
+        $folder . '.page'
     ], 1)) {
-        $path = \substr($path, 0, $end);
+        $folder = \LOT . \D . 'page' . \D . ($path = \substr($path, 0, $end));
         $exist = $path && \exist([
-            \LOT . \D . 'page' . \D . $path . '.archive',
-            \LOT . \D . 'page' . \D . $path . '.page'
+            $folder . '.archive',
+            $folder . '.page'
         ], 1);
         \State::set([
             'has' => [
