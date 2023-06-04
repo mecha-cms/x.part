@@ -1,6 +1,6 @@
 <?php
 
-namespace x\part {
+namespace x\part\page {
     function content($content) {
         if (!$content || false === \strpos($content, "\f")) {
             return $content;
@@ -72,6 +72,10 @@ namespace x\part {
         }
         return $content . $end;
     }
+    \Hook::set('page.content', __NAMESPACE__ . "\\content", 2.2);
+}
+
+namespace x\part {
     function n($content) {
         if (!$content) {
             return $content;
@@ -117,7 +121,6 @@ namespace x\part {
         }
         return $content;
     }
-    \Hook::set('page.content', __NAMESPACE__ . "\\content", 2.2);
     \Hook::set('page.content', __NAMESPACE__ . "\\n", 2.1);
     \Hook::set('route.page', __NAMESPACE__ . "\\route", 99.99);
 }
