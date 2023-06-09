@@ -17,13 +17,25 @@ namespace x\part {
         }
         $part = ((int) ($part ?? 1)) - 1;
         $parts = \explode("\f", $content);
-        $content = $parts[$part] ?? "";
-        if ('/' . $route !== \substr($path, $end = -(\strlen($route) + 1))) {
-            $content = $parts[$part = 0]; // Invalid route, display the first part!
-        } else {
+        $content = $parts[$part] ?? false;
+        // Make sure that route ends with `/page`
+        if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1))) {
+            // Normalize the route to a value without the `/page` ending
             $path = \substr($path, 0, $end);
+            // Route ends with `/page`, but does not point to a valid file
+            $folder = \LOT . \D . 'page' . \D . \strtr($path, ['/' => \D]);
+            if (\exist([
+                $folder . '.archive',
+                $folder . '.page'
+            ], 1) !== $this->path) {
+                // Always show the first part
+                $content = $parts[$part = 0];
+            }
+        } else {
+            // Always show the first part
+            $content = $parts[$part = 0];
         }
-        if ("" === $content) {
+        if (false === $content) {
             return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
         }
         $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
@@ -53,7 +65,7 @@ namespace x\part {
                             'title' => \i('Go to the %s page.', 'previous')
                         ]
                     ],
-                    ' ' => '&#x2003;',
+                    ' ' => '&#xa0;',
                     'next' => [
                         0 => 'a',
                         1 => \i('Next'),
@@ -81,35 +93,45 @@ namespace x\part {
             [$any, $path, $part] = $m;
         }
         $part = ((int) ($part ?? 1)) - 1;
-        // Test if current route ends with `/page` and then resolve it to the native page route
+        // Test if current route ends with `/page`
         $folder = \LOT . \D . 'page' . \D . $path;
-        if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1)) && !\exist([
-            $folder . '.archive',
-            $folder . '.page'
-        ], 1)) {
+        if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1))) {
+            // A page route with `/page` ending is present
+            if (\exist([
+                $folder . '.archive',
+                $folder . '.page'
+            ], 1)) {
+                return $content;
+            }
             $folder = \LOT . \D . 'page' . \D . ($path = \substr($path, 0, $end));
-            $exist = $path && \exist([
+            $file = \exist([
                 $folder . '.archive',
                 $folder . '.page'
             ], 1);
+            $test = $file ? (\From::page(\file_get_contents($file))['content'] ?? "") : "";
+            $test = \fire(__NAMESPACE__ . "\\page__content\\n", [$test], new \Page);
+            $parts = \explode("\f", $test);
             \State::set([
                 'has' => [
-                    'page' => !!$exist,
-                    'pages' => false
+                    'next' => isset($parts[$part + 1]),
+                    'page' => !!$file,
+                    'pages' => false,
+                    'prev' => isset($parts[$part - 1])
                 ],
                 'is' => [
-                    'error' => false,
-                    'page' => !!$exist,
+                    'error' => isset($parts[$part]) ? false : 404,
+                    'page' => !!$file,
                     'pages' => false
                 ],
                 'part' => $part + 1
             ]);
+            // Resolve to the native page route
             return \Hook::fire('route.page', [$content, '/' . $path, $query, $hash]);
         }
         return $content;
     }
     \Hook::set('page.content', __NAMESPACE__ . "\\page__content", 2.2);
-    \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 99.99);
+    \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 99.99); // Execute before the default page route priority!
 }
 
 namespace x\part\page__content {
@@ -125,4 +147,19 @@ namespace x\part\page__content {
         return \preg_replace('/\s*<([\w:-]+)(?:\s[^>]*)?>\s*(?:[\f]|&#(?:12|x[cC]);)\s*<\/\1>\s*|\s*(?:[\f]|&#(?:12|x[cC]);)\s*/', "\f", $content);
     }
     \Hook::set('page.content', __NAMESPACE__ . "\\n", 2.1);
+}
+
+namespace x\part\route__page {
+    function status($content) {
+        \extract($GLOBALS, \EXTR_SKIP);
+        $error = $state->is('error');
+        if ($error && \is_int($error)) {
+            if ($content && \is_array($content) && isset($content[2])) {
+                $content[2] = $error;
+            }
+        }
+        return $content;
+    }
+    // Late error check…
+    \Hook::set('route.page', __NAMESPACE__ . "\\status", 100.01); // Execute after the default page route priority!
 }
