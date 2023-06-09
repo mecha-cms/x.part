@@ -9,8 +9,8 @@ version: 3.0.0
 ...
 
 Split your page content into different web pages by inserting `&#12;` or `&#xc;` HTML entity as the intersection marker.
-This extension is useful for those who want to create a step-by-step guide, or a gallery that contains multiple images,
-so that reader don’t have to load all the images at once.
+This extension is useful for those who want to create a step-by-step tutorial, or a gallery that contains multiple
+images, so that the reader doesn’t have to load all the images at once.
 
 ### Usage
 
