@@ -10,7 +10,7 @@ namespace x\part {
         if (\substr_count($content, "\f") < ($state->x->part->min ?? 2)) {
             return $content;
         }
-        $path = \trim($url->path ?? $state->route ?? 'index', '/');
+        $path = \trim($url->path ?? "", '/');
         $route = \trim($state->x->part->route ?? 'page', '/');
         if (\preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
             [$any, $path, $part] = $m;
@@ -18,8 +18,10 @@ namespace x\part {
         $part = ((int) ($part ?? 1)) - 1;
         $parts = \explode("\f", $content);
         $content = $parts[$part] ?? "";
-        if ('/' . $route !== \substr($path, -(\strlen($route) + 1))) {
+        if ('/' . $route !== \substr($path, $end = -(\strlen($route) + 1))) {
             $content = $parts[$part = 0]; // Invalid route, display the first part!
+        } else {
+            $path = \substr($path, 0, $end);
         }
         if ("" === $content) {
             return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
@@ -27,7 +29,7 @@ namespace x\part {
         $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
         $pager = $pager->chunk(1, $part);
         $pager->hash = $url->hash;
-        $pager->path = '/' . $path;
+        $pager->path = '/' . $path . '/' . $route;
         $pager->query = $url->query;
         $content = '<div aria-posinset="' . ($part + 1) . '" aria-setsize="' . \count($parts) . '" role="doc-part">' . $content . '</div>';
         if (isset($state->x->pager) && \class_exists("\\Layout")) {
@@ -73,7 +75,7 @@ namespace x\part {
     }
     function route__page($content, $path, $query, $hash) {
         \extract($GLOBALS, \EXTR_SKIP);
-        $path = \trim($path ?? $state->route ?? 'index', '/');
+        $path = \trim($path ?? "", '/');
         $route = \trim($state->x->part->route ?? 'page', '/');
         if (\preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
             [$any, $path, $part] = $m;
