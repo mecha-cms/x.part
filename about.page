@@ -1,6 +1,6 @@
 ---
 title: Part
-description: Split page content into different web pages.
+description: Split page content into multiple web pages.
 icon: 'M17 7V9H22V7H17M2 9V15H7V9H2M12 9V11H9V13H12V15L15 12L12 9M17 11V13H22V11H17M17 15V17H22V15H17Z'
 color: '#752f2f'
 author: Taufik Nurrohman
@@ -8,9 +8,9 @@ type: Markdown
 version: 3.0.0
 ...
 
-Split your page content into different web pages by inserting `&#12;` or `&#xc;` HTML entity as the intersection marker.
-This extension is useful for those who want to create a step-by-step tutorial, or a gallery that contains multiple
-images, so that the reader doesn’t have to load all the images at once.
+Split your page content into multiple web pages by inserting a `&#12;` or `&#xc;` HTML entity as an intersection marker.
+This extension is useful for those who want to create a step-by-step tutorial or a gallery that contains multiple images
+so that the reader doesn’t have to load all the images at once.
 
 ### Usage
 
@@ -50,3 +50,7 @@ realize that there **are** people in your life that will stay with you and will 
 
 Etc.
 ~~~
+
+It is recommended to install the [Pager](https://github.com/mecha-cms/x.pager) extension, as it provides a numbered page
+navigation style (by default). Without the extension installed, this feature will still work, but the page navigation
+style will be limited to a minimal next/previous page navigation style.

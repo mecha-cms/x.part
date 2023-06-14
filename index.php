@@ -22,7 +22,7 @@ namespace x\part {
         if ('/' . $route === \substr($path, $end = -(\strlen($route) + 1))) {
             // Normalize the route to a value without the `/page` ending
             $path = \substr($path, 0, $end);
-            // Route ends with `/page`, but does not point to a valid file
+            // Route still ends with `/page`, but does not point to a valid file
             $folder = \LOT . \D . 'page' . \D . \strtr($path, ['/' => \D]);
             if (\exist([
                 $folder . '.archive',
@@ -38,6 +38,8 @@ namespace x\part {
         if (false === $content) {
             return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
         }
+        // Need to fill the `$pager` data with a list of dummy (but valid) file path(s), otherwise the `$pager->count`
+        // value will be invalid because normally any invalid file path data will be ignored by the `Pager` class.
         $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
         $pager = $pager->chunk(1, $part);
         $pager->hash = $url->hash;
