@@ -38,9 +38,8 @@ namespace x\part {
         if (false === $content) {
             return '<p role="status">' . \i('No more %s to show.', 'pages') . '</p>';
         }
-        // Need to fill the `$pager` data with a list of dummy (but valid) file path(s), otherwise the `$pager->count`
-        // value will be invalid because normally any invalid file path data will be ignored by the `Pager` class.
-        $pager = new \Pager(\array_fill(0, \count($parts), $this->path));
+        // Fill the `$pager` data with empty array(s)
+        $pager = new \Pager(\array_fill(0, \count($parts), []));
         $pager = $pager->chunk(1, $part);
         $pager->hash = $url->hash;
         $pager->path = '/' . $path . '/' . $route;
