@@ -3,7 +3,7 @@
   "license": "GPL-3.0-or-later",
   "name": "mecha-cms/x.part",
   "require": {
-    "mecha-cms/x.page": "^3.0.0"
+    "mecha-cms/x.page": "^3.1.0"
   },
   "suggest": {
     "mecha-cms/x.pager": "Install this extension to turn the next/previous navigation into a numbered page style navigation."
